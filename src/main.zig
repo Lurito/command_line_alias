@@ -19,13 +19,26 @@ fn getAliasConfigFilePath(bin_path: []const u8) ![]const u8 {
 }
 
 fn getAliasConfig(config_file: []const u8) ![][]const u8 {
-    var file = try std.fs.openFileAbsolute(config_file, .{});
+    var file = std.fs.openFileAbsolute(config_file, .{}) catch |err| {
+        switch (err) {
+            error.FileNotFound => {
+                std.log.err("config file '{s}' not found", .{config_file});
+            },
+            else => {
+                std.log.err("unknown error, {s}", .{@errorName(err)});
+            },
+        }
+        std.process.exit(1);
+    };
     defer file.close();
 
     var content = try file.readToEndAlloc(allocator, std.math.maxInt(u32));
     defer allocator.free(content);
 
-    var iter = std.mem.split(u8, content, " ");
+    const content_ = try std.mem.replaceOwned(u8, allocator, content, "\r\n", "");
+    defer allocator.free(content_);
+
+    var iter = std.mem.split(u8, content_, " ");
     var buf = std.ArrayList([]const u8).init(allocator);
     defer buf.deinit();
 
@@ -36,7 +49,7 @@ fn getAliasConfig(config_file: []const u8) ![][]const u8 {
 
         const copied = try allocator.dupe(u8, text);
         errdefer allocator.free(copied);
-        
+
         try buf.append(copied);
     }
 

@@ -15,6 +15,7 @@ pub fn build(b: *std.build.Builder) void {
     exe.setTarget(target);
     exe.setBuildMode(mode);
     exe.strip = mode != .Debug;
+    exe.want_lto = mode != .Debug;
     exe.install();
 
     const run_cmd = exe.run();
