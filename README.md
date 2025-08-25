@@ -4,7 +4,7 @@
 
 ## 构建方式
 
-当前版本基于 Zig v0.14.x API 开发。由于 Zig 未进入 stable 且 API 变化极快，更高版本可能无法构建。
+当前版本基于 Zig v0.15.x API 开发。由于 Zig 未进入 stable 且 API 变化极快，更高版本可能无法构建。
 
 ``` bash
 zig build --release=fast

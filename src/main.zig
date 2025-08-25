@@ -39,8 +39,8 @@ fn getAliasConfig(config_file: []const u8) ![][]const u8 {
     defer allocator.free(content_);
 
     var iter = std.mem.splitSequence(u8, content_, " ");
-    var buf = std.ArrayList([]const u8).init(allocator);
-    defer buf.deinit();
+    var buf = std.ArrayList([]const u8).empty;
+    defer buf.deinit(allocator);
 
     while (iter.next()) |text| {
         if (text.len == 0) {
@@ -50,15 +50,15 @@ fn getAliasConfig(config_file: []const u8) ![][]const u8 {
         const copied = try allocator.dupe(u8, text);
         errdefer allocator.free(copied);
 
-        try buf.append(copied);
+        try buf.append(allocator, copied);
     }
 
-    return buf.toOwnedSlice();
+    return buf.toOwnedSlice(allocator);
 }
 
 fn getCommandLine(args: [][:0]u8) ![][]const u8 {
-    var command_line = std.ArrayList([]const u8).init(allocator);
-    defer command_line.deinit();
+    var command_line = std.ArrayList([]const u8).empty;
+    defer command_line.deinit(allocator);
 
     const bin_name = args[0];
     const config_file = try getAliasConfigFilePath(bin_name);
@@ -70,17 +70,17 @@ fn getCommandLine(args: [][:0]u8) ![][]const u8 {
     log("alias config: {any}", .{alias_conf});
 
     // 拼接实际的命令行
-    try command_line.appendSlice(alias_conf);
+    try command_line.appendSlice(allocator, alias_conf);
 
     const flags = args[1..];
     log("appended flags: {any}", .{flags});
 
     // 拼接其他命令行参数
     if (flags.len > 0) {
-        try command_line.appendSlice(flags);
+        try command_line.appendSlice(allocator, flags);
     }
 
-    return command_line.toOwnedSlice();
+    return command_line.toOwnedSlice(allocator);
 }
 
 const log_level: std.log.Level = .info;
